@@ -27,28 +27,31 @@
 | Actions | `src/core/actions.ts` | agreguje wyniki → `{priority, action}[]`, sortowane high→medium |
 | Analyze | `src/core/analyze.ts` | orkiestrator, public API: `analyze(path) → AnalysisResult` |
 
-Publiczne API przez `src/core/index.ts`:
-```ts
-import { analyze } from "package-lens";
-const result = await analyze("./package.json");
-```
+### Etap 2 (MCP server) ✅
+90 testów, 13 plików testowych.
+
+| Co | Gdzie |
+|---|---|
+| MCP stdio server | `src/mcp/index.ts` |
+| 6 tools | `analyze_package`, `get_outdated`, `get_vulnerabilities`, `get_stack`, `get_actions`, `get_bundle_impact` |
+| Testy in-process | `tests/mcp/server.test.ts` (InMemoryTransport + real Client) |
+| Manual test config | `.mcp.json` w root projektu |
+
+Wszystkie tools przyjmują `{ path: string }`. `get_actions` ma opcjonalny filtr `priority?: "low" | "medium" | "high"`.
+
+Użycie w Claude Code: `npm run build` → Claude Code automatycznie spawnuje serwer z `.mcp.json`.
 
 ## Co jest następne
 
-### Etap 2 — MCP server (2-3 dni)
-Plik wejściowy: `src/mcp/index.ts` (teraz placeholder).
-
-Zaimplementować:
-1. `@modelcontextprotocol/sdk` — stdio transport (decyzja z PRD: stdio, nie http)
-2. Tool `analyze_package` — pełny `AnalysisResult` jako JSON string
-3. Tools cząstkowe: `get_outdated`, `get_vulnerabilities`, `get_stack`, `get_actions`, `get_bundle_impact`
-4. Test ręczny w Claude Code przez `.mcp.json` w katalogu projektu
-
-Każdy tool przyjmuje `{ path: string }` i opcjonalne filtry.
-
 ### Etap 3 — CLI (1-2 dni)
 Plik wejściowy: `src/cli/index.ts` (teraz placeholder).
-Commander, komendy `analyze` i `actions`, `--format json|table`.
+
+Zaimplementować:
+1. `commander` — komendy `analyze` i `actions`
+2. `analyze [path]` — pełny AnalysisResult, `--format json|table`
+3. `actions [path]` — lista RecommendedAction, `--priority high|medium|low` filter
+4. Kolorowe output w trybie table (chalk lub kleur)
+5. Exit code 1 gdy score < 50 (CI-friendly)
 
 ## Ważne decyzje architektoniczne
 
@@ -57,6 +60,12 @@ Commander, komendy `analyze` i `actions`, `--format json|table`.
 - **Licenses uproszczone**: `auditLicenses` dostaje pre-resolved `{ pkgName → licenseString }`. Faktyczne fetchowanie licencji per-dep z registry to post-MVP.
 - **Scoped packages w bundlephobia URL**: `@scope/pkg@version` → `@scope%2Fpkg@version` (tylko `/` encode, nie `@`).
 - **ESM only**: wszystkie importy z `.js` extension (NodeNext resolution). Nie używać `require()`.
+- **tsconfig.eslint.json**: ESLint używa osobnego tsconfig rozszerzającego base + `include: ["src", "tests"]`. Build tsconfig (`tsconfig.json`) zawiera tylko `src`.
+- **ignoreDeprecations: "6.0"** w tsconfig — MCP SDK ma `baseUrl` w swoim tsconfig, TS6 to deprecuje.
+
+## Repo
+
+`git@github.com:bthink/package-lens.git`
 
 ## Komendy
 
