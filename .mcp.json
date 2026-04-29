@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "package-lens": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["dist/mcp/index.js"]
+    }
+  }
+}
