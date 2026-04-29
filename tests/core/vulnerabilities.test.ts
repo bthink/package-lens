@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { checkVulnerabilities } from "../../src/core/vulnerabilities.js";
 
-const makeOsvResponse = (vulns: Array<{ id: string; severity: string; summary: string }>) => ({
+const makeOsvResponse = (vulns: Array<{ id: string; severity: string; summary: string }>): object => ({
   vulns: vulns.map((v) => ({
     id: v.id,
     summary: v.summary,
