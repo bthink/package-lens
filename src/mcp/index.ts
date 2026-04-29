@@ -2,6 +2,7 @@ import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import process from "node:process";
+import { fileURLToPath } from "node:url";
 import { analyze } from "../core/analyze.js";
 import type { Priority } from "../types/index.js";
 
@@ -107,7 +108,10 @@ export function createServer(): Server {
           return jsonResponse(result.stack);
 
         case "get_actions": {
-          const priority = params["priority"] as Priority | undefined;
+          const rawPriority = params["priority"];
+          const priority: Priority | undefined = (rawPriority === "low" || rawPriority === "medium" || rawPriority === "high")
+            ? rawPriority
+            : undefined;
           const actions = priority
             ? result.actions.filter((a) => a.priority === priority)
             : result.actions;
@@ -129,8 +133,10 @@ export function createServer(): Server {
   return server;
 }
 
-// Entry point when run as stdio MCP server
-const isMain = process.argv[1]?.endsWith("index.js") || process.argv[1]?.endsWith("index.ts");
+const __filename = fileURLToPath(import.meta.url);
+const isMain =
+  process.argv[1] === __filename ||
+  process.argv[1] === __filename.replace(/\.js$/, ".ts");
 if (isMain) {
   const server = createServer();
   const transport = new StdioServerTransport();

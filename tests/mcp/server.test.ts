@@ -54,6 +54,7 @@ describe("MCP server tools", () => {
   it("lists all 6 tools", async () => {
     const { tools } = await client.listTools();
     const names = tools.map((t) => t.name);
+    expect(tools).toHaveLength(6);
     expect(names).toContain("analyze_package");
     expect(names).toContain("get_outdated");
     expect(names).toContain("get_vulnerabilities");
@@ -126,6 +127,11 @@ describe("MCP server tools", () => {
     const parsed = JSON.parse(content[0].text) as unknown[];
     expect(Array.isArray(parsed)).toBe(true);
     expect(parsed[0]).toMatchObject({ name: "lodash", sizeGzip: "25 kB" });
+  });
+
+  it("returns error when path is missing", async () => {
+    const result = await client.callTool({ name: "analyze_package", arguments: {} });
+    expect(result.isError).toBe(true);
   });
 
   it("returns isError when analyze throws", async () => {
