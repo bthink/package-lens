@@ -12,6 +12,8 @@
     "noFallthroughCasesInSwitch": true,
     "exactOptionalPropertyTypes": true,
     "forceConsistentCasingInFileNames": true,
+    "types": ["node"],
+    "ignoreDeprecations": "6.0",
     "skipLibCheck": true,
     "declaration": true,
     "declarationMap": true,
