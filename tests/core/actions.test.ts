@@ -78,4 +78,56 @@ describe("generateActions", () => {
     expect(result[0]?.priority).toBe("high");
     expect(result[result.length - 1]?.priority).toBe("medium");
   });
+
+  it("includes pnpm install command when packageManager is pnpm", () => {
+    const result = generateActions({
+      outdated: [{ name: "react", current: "17.0.0", latest: "18.2.0", severity: "major" }],
+      vulnerabilities: [],
+      duplicates: [],
+      missingScripts: [],
+      suspiciousScripts: [],
+      licenseIssues: [],
+      packageManager: "pnpm",
+    });
+    expect(result[0]?.action).toMatch(/pnpm add react@18\.2\.0/);
+  });
+
+  it("includes npm install command when packageManager is npm", () => {
+    const result = generateActions({
+      outdated: [{ name: "react", current: "17.0.0", latest: "18.2.0", severity: "major" }],
+      vulnerabilities: [],
+      duplicates: [],
+      missingScripts: [],
+      suspiciousScripts: [],
+      licenseIssues: [],
+      packageManager: "npm",
+    });
+    expect(result[0]?.action).toMatch(/npm install react@18\.2\.0/);
+  });
+
+  it("includes yarn add command when packageManager is yarn", () => {
+    const result = generateActions({
+      outdated: [{ name: "react", current: "17.0.0", latest: "18.2.0", severity: "major" }],
+      vulnerabilities: [],
+      duplicates: [],
+      missingScripts: [],
+      suspiciousScripts: [],
+      licenseIssues: [],
+      packageManager: "yarn",
+    });
+    expect(result[0]?.action).toMatch(/yarn add react@18\.2\.0/);
+  });
+
+  it("defaults to npm when packageManager is unknown", () => {
+    const result = generateActions({
+      outdated: [{ name: "react", current: "17.0.0", latest: "18.2.0", severity: "major" }],
+      vulnerabilities: [],
+      duplicates: [],
+      missingScripts: [],
+      suspiciousScripts: [],
+      licenseIssues: [],
+      packageManager: "unknown",
+    });
+    expect(result[0]?.action).toMatch(/npm install react@18\.2\.0/);
+  });
 });

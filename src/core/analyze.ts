@@ -42,6 +42,7 @@ export async function analyze(packageJsonPath: string): Promise<AnalysisResult> 
     missingScripts: scripts.missing,
     suspiciousScripts: scripts.suspicious,
     licenseIssues: licenses.issues,
+    packageManager: pkg.packageManager,
   });
 
   return {

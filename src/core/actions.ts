@@ -1,4 +1,4 @@
-import type { RecommendedAction, OutdatedPackage, Vulnerability, DuplicateGroup, Priority } from "../types/index.js";
+import type { RecommendedAction, OutdatedPackage, Vulnerability, DuplicateGroup, Priority, PackageMeta } from "../types/index.js";
 
 interface ActionsInput {
   outdated: OutdatedPackage[];
@@ -7,9 +7,19 @@ interface ActionsInput {
   missingScripts: string[];
   suspiciousScripts: string[];
   licenseIssues: string[];
+  packageManager?: PackageMeta["packageManager"];
 }
 
 const PRIORITY_ORDER: Record<Priority, number> = { high: 0, medium: 1, low: 2 };
+
+function installCmd(pm: PackageMeta["packageManager"] | undefined, pkg: string, version: string): string {
+  const spec = `${pkg}@${version}`;
+  switch (pm) {
+    case "pnpm": return `pnpm add ${spec}`;
+    case "yarn": return `yarn add ${spec}`;
+    default: return `npm install ${spec}`;
+  }
+}
 
 export function generateActions(input: ActionsInput): RecommendedAction[] {
   const actions: RecommendedAction[] = [];
@@ -21,7 +31,8 @@ export function generateActions(input: ActionsInput): RecommendedAction[] {
 
   for (const pkg of input.outdated) {
     const priority: Priority = pkg.severity === "major" ? "high" : "medium";
-    actions.push({ priority, action: `upgrade ${pkg.name} from ${pkg.current} to ${pkg.latest}` });
+    const cmd = installCmd(input.packageManager, pkg.name, pkg.latest);
+    actions.push({ priority, action: `upgrade ${pkg.name} from ${pkg.current} to ${pkg.latest} — run: ${cmd}` });
   }
 
   for (const dup of input.duplicates) {
