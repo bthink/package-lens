@@ -63,6 +63,12 @@ Zachowania:
 
 Ważne: testy integracyjne spawnują subprocess przez `node --import tsx/esm`. Score = 0 bez sieci (sub-analyzery zwracają `[]` na błąd sieciowy) — testy nie mogą zakładać konkretnego exit code, muszą być dynamiczne.
 
+### Hotfix — package manager-aware actions ✅
+Akcje dla outdated packages zawierają konkretną komendę instalacji z właściwym package managerem.
+- `pnpm add react@18.2.0` dla pnpm, `yarn add` dla yarn, `npm install` dla npm/unknown
+- `generateActions()` przyjmuje opcjonalny `packageManager` → przekazywany z `analyze()`
+- 4 nowe testy, 119 total
+
 ## Co jest następne
 
 ### Etap 4 — Publish / DX (opcjonalny)
