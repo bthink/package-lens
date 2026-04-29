@@ -41,17 +41,37 @@ Wszystkie tools przyjmują `{ path: string }`. `get_actions` ma opcjonalny filtr
 
 Użycie w Claude Code: `npm run build` → Claude Code automatycznie spawnuje serwer z `.mcp.json`.
 
+### Etap 3 (CLI) ✅
+115 testów, 15 plików testowych.
+
+| Co | Gdzie |
+|---|---|
+| Output formatters | `src/cli/output.ts` |
+| Commander entry | `src/cli/index.ts` |
+| Unit tests | `tests/cli/output.test.ts` (15 testów) |
+| Integration tests | `tests/cli/cli.integration.test.ts` (10 testów, subprocess) |
+
+Komendy:
+- `package-lens analyze [path]` — pełny AnalysisResult, `--format json|table` (default: table)
+- `package-lens actions [path]` — lista RecommendedAction, `--priority high|medium|low`
+
+Zachowania:
+- `path` opcjonalny — domyślnie `./package.json`
+- exit code 1 gdy `score < 50` (CI-friendly)
+- chalk koloruje output w trybie table
+- stderr + exit 1 przy błędzie odczytu pliku
+
+Ważne: testy integracyjne spawnują subprocess przez `node --import tsx/esm`. Score = 0 bez sieci (sub-analyzery zwracają `[]` na błąd sieciowy) — testy nie mogą zakładać konkretnego exit code, muszą być dynamiczne.
+
 ## Co jest następne
 
-### Etap 3 — CLI (1-2 dni)
-Plik wejściowy: `src/cli/index.ts` (teraz placeholder).
-
-Zaimplementować:
-1. `commander` — komendy `analyze` i `actions`
-2. `analyze [path]` — pełny AnalysisResult, `--format json|table`
-3. `actions [path]` — lista RecommendedAction, `--priority high|medium|low` filter
-4. Kolorowe output w trybie table (chalk lub kleur)
-5. Exit code 1 gdy score < 50 (CI-friendly)
+### Etap 4 — Publish / DX (opcjonalny)
+Możliwe kierunki:
+1. `npm publish` — opublikować jako `package-lens` na npm registry
+2. `npx package-lens analyze` — zero-install UX
+3. README z przykładami użycia CLI i MCP
+4. GitHub Release z tagiem `v0.1.0`
+5. Rozszerzyć score o więcej czynników (license issues, bundle size penalties)
 
 ## Ważne decyzje architektoniczne
 
@@ -62,6 +82,8 @@ Zaimplementować:
 - **ESM only**: wszystkie importy z `.js` extension (NodeNext resolution). Nie używać `require()`.
 - **tsconfig.eslint.json**: ESLint używa osobnego tsconfig rozszerzającego base + `include: ["src", "tests"]`. Build tsconfig (`tsconfig.json`) zawiera tylko `src`.
 - **ignoreDeprecations: "6.0"** w tsconfig — MCP SDK ma `baseUrl` w swoim tsconfig, TS6 to deprecuje.
+- **CLI output.ts osobny od index.ts** — formattery jako czyste funkcje (string in, string out) umożliwiają unit testy bez spawnowania procesu.
+- **Exit code po stdout** — `process.exit(1)` wywołany po `process.stdout.write()`, żeby JSON trafił do konsumenta przed zamknięciem.
 
 ## Repo
 
@@ -70,9 +92,11 @@ Zaimplementować:
 ## Komendy
 
 ```bash
-npm test                          # wszystkie testy
+npm test                          # wszystkie testy (115)
 npx vitest run tests/core/score.test.ts  # jeden plik
 npm run typecheck                 # tsc --noEmit
 npm run lint                      # eslint src tests
 npm run build                     # tsup → dist/
+npm run dev                       # tsx src/cli/index.ts (local CLI)
+node --import tsx/esm src/cli/index.ts analyze fixtures/nextjs/package.json
 ```
